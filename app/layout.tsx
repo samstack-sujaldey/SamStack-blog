@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import { Suspense } from "react";
 import { ThemeModeScript } from "flowbite-react";
 import type { Metadata } from "next";
@@ -41,6 +42,7 @@ export default function RootLayout({
               <Header></Header>
             </Suspense>
             {children}
+            <Analytics></Analytics>
           </ThemeProvider>
         </body>
       </html>

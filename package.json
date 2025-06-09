@@ -14,6 +14,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.21.0",
     "@clerk/themes": "^2.2.49",
+    "@vercel/analytics": "^1.5.0",
     "flowbite-react": "^0.11.7",
     "next": "^15.3.0",
     "next-themes": "^0.4.6",
