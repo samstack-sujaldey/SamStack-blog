@@ -2,7 +2,7 @@
 
 import { SignUp } from "@clerk/nextjs";
 import { useTheme } from "next-themes";
-import { dark, light } from "@clerk/themes";
+import { dark } from "@clerk/themes";
 import { useState, useEffect } from "react";
 
 export default function SignUpPage() {
@@ -20,7 +20,7 @@ export default function SignUpPage() {
         path="/sign-up"
         signInUrl="/sign-in"
         appearance={{
-          baseTheme: theme === "dark" ? dark : light,
+          baseTheme: theme === "dark" ? dark : undefined,
         }}
       />
     </div>
