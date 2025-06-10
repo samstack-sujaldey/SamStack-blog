@@ -28,7 +28,7 @@ export const connect = async () => {
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
-      dbName: "SamStack-Ed Blog",
+      dbName: "SamStack-Ed-Blog",
     });
   }
 
