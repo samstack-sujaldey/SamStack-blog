@@ -57,7 +57,7 @@ export default function Header() {
         className="self-center text-sm font-semibold whitespace-nowrap sm:text-xl dark:text-white"
       >
         <span className="me-1 mb-2 rounded-lg bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 px-1.5 py-1.5 text-center text-sm font-bold text-gray-900 shadow-lg shadow-lime-500/50 hover:bg-gradient-to-br focus:ring-4 focus:ring-lime-300 focus:outline-none md:px-2.5 md:py-2.5 md:text-lg dark:shadow-lg dark:shadow-lime-800/80 dark:focus:ring-lime-800">
-          SamStack&apos;s
+          SamStack-Ed
         </span>
         <span className="text-gray-900 dark:text-white">Blog</span>
       </Link>
