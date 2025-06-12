@@ -1,0 +1,19 @@
+"use client";
+// lib/supabaseClient.ts
+import { createBrowserClient } from "@supabase/ssr";
+
+export const createSupabaseClient = () =>
+  createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        fetch: (input, init?) => {
+          init = {
+            ...init,
+          };
+          return fetch(input, init);
+        },
+      },
+    },
+  );

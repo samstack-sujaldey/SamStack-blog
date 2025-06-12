@@ -1,73 +1,96 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { useUser, useAuth } from "@clerk/nextjs";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { FileInput, Select, TextInput } from "flowbite-react";
-
 import dynamic from "next/dynamic";
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 import "react-quill-new/dist/quill.snow.css";
 
-export default function CreatePostPage() {
-  const { isSignedIn, user, isLoaded } = useUser();
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-  if (!isLoaded) {
-    return null;
+const ADMIN_USER_ID = "user_2yKnCmHUq7o0kKl2GCJKR3ebf7S";
+
+export default function CreatePostPage() {
+  const { isSignedIn, user } = useUser();
+  const { getToken } = useAuth();
+  const [file, setFile] = useState<File | null>(null);
+  const [supabase, setSupabase] = useState<any>(null);
+
+  useEffect(() => {
+    const initSupabase = async () => {
+      const token = await getToken({ template: "supabase" });
+      const client = createClientComponentClient();
+
+      if (token) {
+        await client.auth.setSession({
+          access_token: token,
+          refresh_token: "", // empty is okay
+        });
+      }
+
+      setSupabase(client);
+    };
+
+    initSupabase();
+  }, [getToken]);
+
+  const uploadImage = async () => {
+    if (!file || !supabase) {
+      console.error("No file selected or Supabase not ready");
+      return;
+    }
+
+    const filePath = `public/screenshots/${Date.now()}-${file.name}`;
+
+    const { error } = await supabase.storage
+      .from("blog-uploads")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("Upload error:", error.message);
+    } else {
+      console.log("✅ Upload successful!");
+    }
+  };
+
+  if (!isSignedIn || user?.id !== ADMIN_USER_ID) {
+    return (
+      <div className="mt-[70%] text-center text-xl font-bold md:mt-[20%] md:text-3xl md:font-extrabold">
+        Unauthorized Access Not Allowed
+      </div>
+    );
   }
 
-  if (isSignedIn && user.publicMetadata.isAdmin) {
-    return (
-      <div className="mx-auto min-h-screen max-w-3xl p-3">
-        <h1 className="my-7 text-center text-3xl font-semibold">
-          SamStack-Ed Post
-        </h1>
-        <form className="flex flex-col gap-4">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row">
-            <TextInput
-              type="text"
-              placeholder="Title"
-              required
-              id="title"
-              className="flex-1"
-            />
-            <Select>
-              <option value="uncategorized">Select a category</option>
-              <option value="javascript">JavaScript</option>
-              <option value="reactjs">React.js</option>
-              <option value="nextjs">Next.js</option>
-              <option value="prisma"></option>
-              <option value="html"></option>
-              <option value="css"></option>
-            </Select>
-          </div>
-          <div className="flex items-center justify-between gap-4 border-4 border-dotted border-teal-500 p-3">
-            <FileInput type="file" accept="image/*" />
-            <button className="group relative me-2 mb-2 inline-flex items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-teal-300 to-lime-300 p-0.5 text-sm font-medium text-gray-900 group-hover:from-teal-300 group-hover:to-lime-300 focus:ring-4 focus:ring-lime-200 focus:outline-none dark:text-white dark:hover:text-gray-900 dark:focus:ring-lime-800">
-              <span className="relative rounded-md bg-white px-5 py-2.5 transition-all duration-75 ease-in group-hover:bg-transparent dark:bg-gray-900 group-hover:dark:bg-transparent">
-                Upload Image
-              </span>
-            </button>
-          </div>
-
-          <ReactQuill
-            theme="snow"
-            placeholder="Write something..."
-            className="mb-12 h-72"
-            required
+  return (
+    <div className="mx-auto min-h-screen max-w-3xl p-3">
+      <h1 className="my-7 text-center text-3xl font-semibold">
+        SamStack-Ed Post
+      </h1>
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={(e) => e.preventDefault()}
+      >
+        {/* Your input fields */}
+        <div className="flex items-center justify-between gap-4 border-4 border-dotted border-teal-500 p-3">
+          <FileInput
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
           <button
             type="button"
-            className="me-2 mb-2 rounded-lg bg-gradient-to-r from-teal-200 to-lime-200 px-5 py-2.5 text-center text-sm font-medium text-gray-900 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-200 focus:ring-4 focus:ring-lime-200 focus:outline-none dark:focus:ring-teal-700"
+            onClick={uploadImage}
+            className="group relative me-2 mb-2 inline-flex items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-teal-300 to-lime-300 p-0.5 text-sm font-medium text-gray-900"
           >
-            Publish
+            <span className="relative rounded-md bg-white px-5 py-2.5 transition-all group-hover:bg-transparent">
+              Upload Image
+            </span>
           </button>
-        </form>
-      </div>
-    );
-  } else {
-    return (
-      <div className="mt-[70%] text-center text-xl font-bold md:mt-[20%] md:text-3xl md:font-extrabold">
-        <div>Unauthorized Access Not Allowed</div>
-      </div>
-    );
-  }
+        </div>
+      </form>
+    </div>
+  );
 }
