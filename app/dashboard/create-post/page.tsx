@@ -5,7 +5,7 @@ import { Button, FileInput, TextInput, Select } from "flowbite-react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
-import "react-quill-new/dist/quill.snow.css";
+import "react-quill/dist/quill.snow.css";
 
 export default function CreatePostPage() {
   const [file, setFile] = useState<File | null>(null);
