@@ -3,12 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Readable } from "stream";
 import busboy from "busboy";
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+import { ReadableStream } from "stream/web";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,16 +12,22 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const bb = busboy({ headers: Object.fromEntries(req.headers) });
+    // Check if body exists
+    if (!req.body) {
+      return NextResponse.json(
+        { success: false, message: "No request body" },
+        { status: 400 },
+      );
+    }
 
+    const bb = busboy({ headers: Object.fromEntries(req.headers) });
     const buffers: Buffer[] = [];
     let fileName = "";
 
-    return await new Promise((resolve, reject) => {
+    return await new Promise<NextResponse>((resolve, reject) => {
       bb.on("file", (_, file, info) => {
         fileName = info.filename;
-
-        file.on("data", (data) => buffers.push(data));
+        file.on("data", (data: Buffer) => buffers.push(data));
         file.on("limit", () => console.log("File too large"));
       });
 
@@ -41,29 +42,51 @@ export async function POST(req: NextRequest) {
       });
 
       bb.on("finish", async () => {
-        const buffer = Buffer.concat(buffers);
+        try {
+          const buffer = Buffer.concat(buffers);
 
-        const { error } = await supabase.storage
-          .from("blog-uploads")
-          .upload(`screenshots/${Date.now()}-${fileName}`, buffer, {
-            contentType: "image/png",
-            upsert: true,
-          });
+          // Generate a unique filename
+          const uniqueFileName = `${Date.now()}-${fileName}`;
 
-        if (error) {
-          console.error("Upload error:", error);
+          const { error } = await supabase.storage
+            .from("blog-uploads")
+            .upload(`screenshots/${uniqueFileName}`, buffer, {
+              contentType: "image/png",
+              upsert: true,
+            });
+
+          if (error) {
+            console.error("Upload error:", error);
+            resolve(
+              NextResponse.json(
+                { success: false, message: error.message },
+                { status: 500 },
+              ),
+            );
+          } else {
+            resolve(
+              NextResponse.json(
+                {
+                  success: true,
+                  fileName: uniqueFileName,
+                },
+                { status: 200 },
+              ),
+            );
+          }
+        } catch (uploadError) {
+          console.error("Upload processing error:", uploadError);
           resolve(
             NextResponse.json(
-              { success: false, message: error.message },
+              { success: false, message: "Upload processing failed" },
               { status: 500 },
             ),
           );
-        } else {
-          resolve(NextResponse.json({ success: true }, { status: 200 }));
         }
       });
 
-      const stream = Readable.fromWeb(req.body as any);
+      // Fixed type assertion
+      const stream = Readable.fromWeb(req.body as ReadableStream);
       stream.pipe(bb);
     });
   } catch (err) {
