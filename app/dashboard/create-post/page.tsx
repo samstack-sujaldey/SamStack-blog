@@ -1,96 +1,113 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useUser, useAuth } from "@clerk/nextjs";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { FileInput, Select, TextInput } from "flowbite-react";
+import { useState } from "react";
+import { useUser } from "@clerk/nextjs";
+import { Button, FileInput, TextInput, Select } from "flowbite-react";
 import dynamic from "next/dynamic";
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 import "react-quill-new/dist/quill.snow.css";
 
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
-
-const ADMIN_USER_ID = "user_2yKnCmHUq7o0kKl2GCJKR3ebf7S";
-
 export default function CreatePostPage() {
-  const { isSignedIn, user } = useUser();
-  const { getToken } = useAuth();
   const [file, setFile] = useState<File | null>(null);
-  const [supabase, setSupabase] = useState<any>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+  const { isSignedIn, user } = useUser();
+  const handleUpload = async () => {
+    if (!file) return;
+    setUploading(true);
 
-  useEffect(() => {
-    const initSupabase = async () => {
-      const token = await getToken({ template: "supabase" });
-      const client = createClientComponentClient();
+    const formData = new FormData();
+    formData.append("file", file);
 
-      if (token) {
-        await client.auth.setSession({
-          access_token: token,
-          refresh_token: "", // empty is okay
-        });
-      }
-
-      setSupabase(client);
-    };
-
-    initSupabase();
-  }, [getToken]);
-
-  const uploadImage = async () => {
-    if (!file || !supabase) {
-      console.error("No file selected or Supabase not ready");
-      return;
-    }
-
-    const filePath = `public/screenshots/${Date.now()}-${file.name}`;
-
-    const { error } = await supabase.storage
-      .from("blog-uploads")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: true,
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
 
-    if (error) {
-      console.error("Upload error:", error.message);
-    } else {
-      console.log("✅ Upload successful!");
+      const contentType = res.headers.get("content-type");
+      const isJson = contentType?.includes("application/json");
+      const data = isJson ? await res.json() : null;
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.message || "Upload failed");
+      }
+
+      const uploadedUrl = data.url || URL.createObjectURL(file);
+      setPreviewUrl(uploadedUrl);
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("❌ Upload failed.");
+    } finally {
+      setUploading(false);
     }
   };
 
-  if (!isSignedIn || user?.id !== ADMIN_USER_ID) {
+  if (isSignedIn && user.publicMetadata.isAdmin) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <h1 className="mb-6 text-center text-3xl font-semibold">
+          Create a post
+        </h1>
+
+        <form className="flex min-h-[80vh] flex-col gap-4">
+          <TextInput type="text" placeholder="Title" required />
+
+          <Select>
+            <option value="uncategorized">Select a category</option>
+            <option value="javascript">JavaScript</option>
+            <option value="reactjs">React.js</option>
+            <option value="nextjs">Next.js</option>
+            <option value="prisma"></option>
+            <option value="html"></option>
+            <option value="css"></option>
+          </Select>
+
+          <div className="rounded-md border-2 border-dotted border-blue-400 p-4">
+            <div className="flex items-center gap-4">
+              <FileInput
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              <Button
+                onClick={handleUpload}
+                disabled={uploading}
+                color="purple"
+              >
+                {uploading ? "Uploading..." : "Upload Image"}
+              </Button>
+            </div>
+
+            {previewUrl && (
+              <img
+                src={previewUrl}
+                alt="Uploaded Preview"
+                className="mx-auto mt-4 h-72 rounded-md object-contain shadow"
+              />
+            )}
+          </div>
+
+          <div className="flex flex-grow flex-col">
+            <ReactQuill
+              theme="snow"
+              placeholder="Write something..."
+              className="min-h-[40vh] rounded-md"
+            />
+          </div>
+
+          <button
+            type="button"
+            className="me-2 mb-2 rounded-lg bg-gradient-to-r from-teal-200 to-lime-200 px-5 py-2.5 text-center text-sm font-medium text-gray-900 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-200 focus:ring-4 focus:ring-lime-200 focus:outline-none dark:focus:ring-teal-700"
+          >
+            Publish
+          </button>
+        </form>
+      </div>
+    );
+  } else {
     return (
       <div className="mt-[70%] text-center text-xl font-bold md:mt-[20%] md:text-3xl md:font-extrabold">
-        Unauthorized Access Not Allowed
+        <div>Unauthorized Access Not Allowed</div>
       </div>
     );
   }
-
-  return (
-    <div className="mx-auto min-h-screen max-w-3xl p-3">
-      <h1 className="my-7 text-center text-3xl font-semibold">
-        SamStack-Ed Post
-      </h1>
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={(e) => e.preventDefault()}
-      >
-        {/* Your input fields */}
-        <div className="flex items-center justify-between gap-4 border-4 border-dotted border-teal-500 p-3">
-          <FileInput
-            accept="image/*"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-          <button
-            type="button"
-            onClick={uploadImage}
-            className="group relative me-2 mb-2 inline-flex items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-teal-300 to-lime-300 p-0.5 text-sm font-medium text-gray-900"
-          >
-            <span className="relative rounded-md bg-white px-5 py-2.5 transition-all group-hover:bg-transparent">
-              Upload Image
-            </span>
-          </button>
-        </div>
-      </form>
-    </div>
-  );
 }

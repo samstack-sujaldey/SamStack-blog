@@ -1,5 +1,5 @@
 "use client";
-// lib/supabaseClient.ts
+
 import { createBrowserClient } from "@supabase/ssr";
 
 export const createSupabaseClient = () =>
@@ -9,10 +9,10 @@ export const createSupabaseClient = () =>
     {
       global: {
         fetch: (input, init?) => {
-          init = {
+          return fetch(input, {
             ...init,
-          };
-          return fetch(input, init);
+            credentials: "include", // Required for Clerk Auth
+          });
         },
       },
     },
