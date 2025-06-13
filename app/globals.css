@@ -1,9 +1,7 @@
 @import "tailwindcss";
 @plugin "flowbite-react/plugin/tailwindcss";
 @source "../.flowbite-react/class-list.json";
-
 @custom-variant dark (&:where(.dark, .dark *));
-
 @tailwind utilities;
 
 body {
@@ -42,4 +40,105 @@ body {
 
 .dark .post-content a {
   color: red;
+}
+
+@layer components {
+  /* Quill Editor Styles */
+  .ql-editor {
+    min-height: 300px;
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  /* Placeholder styling for light mode */
+  .ql-editor.ql-blank::before {
+    color: #6b7280 !important; /* gray-500 */
+    opacity: 1;
+  }
+
+  /* Dark mode editor styles */
+  .dark .ql-editor {
+    background-color: #111827 !important; /* bg-gray-900 */
+    color: #f9fafb !important; /* text-gray-100 */
+  }
+
+  /* Dark mode placeholder */
+  .dark .ql-editor.ql-blank::before {
+    color: #9ca3af !important; /* gray-400 */
+    opacity: 1;
+  }
+
+  /* Toolbar styles - Light mode */
+  .ql-toolbar {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+  }
+
+  .ql-toolbar .ql-stroke {
+    stroke: #374151; /* gray-700 */
+  }
+
+  .ql-toolbar .ql-fill {
+    fill: #374151; /* gray-700 */
+  }
+
+  .ql-toolbar .ql-picker-label {
+    color: #374151; /* gray-700 */
+  }
+
+  .ql-toolbar button:hover,
+  .ql-toolbar button:focus {
+    background-color: #e5e7eb; /* gray-200 */
+  }
+
+  /* Dark mode toolbar styles */
+  .dark .ql-toolbar {
+    background-color: #1f2937 !important; /* bg-gray-800 */
+    border-color: #374151 !important; /* border-gray-700 */
+  }
+
+  .dark .ql-toolbar .ql-stroke {
+    stroke: #f9fafb !important; /* white */
+  }
+
+  .dark .ql-toolbar .ql-fill {
+    fill: #f9fafb !important; /* white */
+  }
+
+  .dark .ql-toolbar .ql-picker-label {
+    color: #f9fafb !important; /* white */
+  }
+
+  .dark .ql-toolbar button:hover,
+  .dark .ql-toolbar button:focus {
+    background-color: #374151 !important; /* gray-700 */
+  }
+
+  .dark .ql-toolbar button.ql-active {
+    background-color: #4f46e5 !important; /* indigo-600 */
+  }
+
+  /* Dropdown styles */
+  .dark .ql-toolbar .ql-picker-options {
+    background-color: #1f2937 !important; /* gray-800 */
+    border-color: #374151 !important; /* gray-700 */
+  }
+
+  .dark .ql-toolbar .ql-picker-item {
+    color: #f9fafb !important; /* white */
+  }
+
+  .dark .ql-toolbar .ql-picker-item:hover {
+    background-color: #374151 !important; /* gray-700 */
+  }
+
+  /* Fix for selected text in dark mode */
+  .dark .ql-editor ::selection {
+    background-color: #3b82f6; /* blue-500 */
+  }
+
+  /* Container border fix for dark mode */
+  .dark .ql-container {
+    border-color: #374151 !important; /* gray-700 */
+  }
 }
