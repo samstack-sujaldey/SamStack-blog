@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
           const { error } = await supabase.storage
             .from("blog-uploads")
-            .upload(`screenshots/${uniqueFileName}`, buffer, {
+            .upload(`images/${uniqueFileName}`, buffer, {
               contentType: "image/png",
               upsert: true,
             });

@@ -14,7 +14,7 @@ import { FaMoon, FaSun } from "react-icons/fa";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import { dark, light } from "@clerk/themes";
+import { dark } from "@clerk/themes";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -32,7 +32,7 @@ export default function Header() {
   }, []);
 
   // Update URL on search form submit
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
     const urlParams = new URLSearchParams(searchParams);
     urlParams.set("searchTerm", searchTerm);
@@ -95,7 +95,7 @@ export default function Header() {
         {mounted && (
           <SignedIn>
             <UserButton
-              appearance={{ baseTheme: theme === "light" ? light : dark }}
+              appearance={{ baseTheme: theme === "dark" ? dark : undefined }}
             />
           </SignedIn>
         )}
