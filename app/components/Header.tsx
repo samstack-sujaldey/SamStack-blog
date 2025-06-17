@@ -15,7 +15,7 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Header() {
@@ -32,8 +32,8 @@ export default function Header() {
   }, []);
 
   // Update URL on search form submit
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const urlParams = new URLSearchParams(searchParams);
     urlParams.set("searchTerm", searchTerm);
     const searchQuery = urlParams.toString();
